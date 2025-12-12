@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Communication Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            color: #4fc3f7;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(79, 195, 247, 0.5);
+        }
+
+        .header p {
+            color: #b0b0b0;
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            background: rgba(30, 30, 50, 0.8);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(79, 195, 247, 0.2);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 15px 20px;
+            background: rgba(20, 20, 40, 0.8);
+            border: 2px solid rgba(79, 195, 247, 0.3);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #4fc3f7;
+            box-shadow: 0 0 15px rgba(79, 195, 247, 0.3);
+        }
+
+        .input-group input::placeholder {
+            color: #888;
+        }
+
+        .btn-send {
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 195, 247, 0.4);
+        }
+
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 195, 247, 0.6);
+        }
+
+        .btn-send:active {
+            transform: translateY(0);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .simulation-flow {
+            display: flex;
+            align-items: flex-start;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .flow-box {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(30, 30, 50, 0.8);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(79, 195, 247, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .flow-box.active {
+            border-color: #4fc3f7;
+            box-shadow: 0 0 30px rgba(79, 195, 247, 0.5);
+        }
+
+        .flow-box h2 {
+            color: #4fc3f7;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            border-bottom: 2px solid rgba(79, 195, 247, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5em;
+            color: #4fc3f7;
+            min-width: 60px;
+            transition: all 0.5s ease;
+            margin-top: 60px;
+        }
+
+        .arrow.animate {
+            animation: pulse 1s ease-in-out;
+            text-shadow: 0 0 20px rgba(79, 195, 247, 0.8);
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.8; }
+        }
+
+        .info-item {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: rgba(20, 20, 40, 0.6);
+            border-radius: 6px;
+            border-left: 3px solid #4fc3f7;
+        }
+
+        .info-item label {
+            display: block;
+            color: #b0b0b0;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-item .value {
+            color: #e0e0e0;
+            font-size: 1em;
+            word-break: break-all;
+            font-family: 'Courier New', monospace;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+        }
+
+        .status.no-error {
+            background: rgba(76, 175, 80, 0.2);
+            border: 2px solid #4caf50;
+            color: #4caf50;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.4);
+        }
+
+        .status.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 2px solid #f44336;
+            color: #f44336;
+            box-shadow: 0 0 20px rgba(244, 67, 54, 0.4);
+        }
+
+        .status.pending {
+            background: rgba(255, 193, 7, 0.2);
+            border: 2px solid #ffc107;
+            color: #ffc107;
+        }
+
+        .error-method {
+            display: inline-block;
+            padding: 5px 12px;
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+            border-radius: 4px;
+            color: #f44336;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .no-error-method {
+            display: inline-block;
+            padding: 5px 12px;
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            color: #4caf50;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            color: #4fc3f7;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid rgba(79, 195, 247, 0.3);
+            border-top: 3px solid #4fc3f7;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .simulation-flow {
+                flex-direction: column;
+            }
+
+            .arrow {
+                transform: rotate(90deg);
+                margin: 10px 0;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Data Communication Simulation</h1>
+            <p>Simulate data transmission with error detection using parity checking</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" id="messageInput" placeholder="Enter message to send..." />
+                <button class="btn-send" id="sendBtn" onclick="runSimulation()">Send</button>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Running simulation...</p>
+        </div>
+
+        <div class="simulation-flow">
+            <!-- Sender Box -->
+            <div class="flow-box" id="senderBox">
+                <h2>Sender (Client 1)</h2>
+                <div id="senderContent">
+                    <div class="info-item">
+                        <label>Original Data</label>
+                        <div class="value" id="senderData">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Method</label>
+                        <div class="value" id="senderMethod">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Sent Check Bits</label>
+                        <div class="value" id="senderChecksum">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Original Packet</label>
+                        <div class="value" id="senderPacket">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow" id="arrow1">→</div>
+
+            <!-- Server Box -->
+            <div class="flow-box" id="serverBox">
+                <h2>Server (Error Injection)</h2>
+                <div id="serverContent">
+                    <div class="info-item">
+                        <label>Corrupted Data</label>
+                        <div class="value" id="serverData">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Error Applied</label>
+                        <div class="value" id="serverErrorApplied">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Error Method</label>
+                        <div class="value" id="serverErrorMethod">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Packet Sent to Receiver</label>
+                        <div class="value" id="serverPacket">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="arrow" id="arrow2">→</div>
+
+            <!-- Receiver Box -->
+            <div class="flow-box" id="receiverBox">
+                <h2>Receiver (Client 2)</h2>
+                <div id="receiverContent">
+                    <div class="info-item">
+                        <label>Received Data</label>
+                        <div class="value" id="receiverData">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Method</label>
+                        <div class="value" id="receiverMethod">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Received Check Bits</label>
+                        <div class="value" id="receiverReceivedChecksum">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Computed Check Bits</label>
+                        <div class="value" id="receiverComputedChecksum">-</div>
+                    </div>
+                    <div class="status pending" id="receiverStatus">Waiting for simulation...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const loading = document.getElementById('loading');
+
+        // Allow Enter key to trigger send
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                runSimulation();
+            }
+        });
+
+        async function runSimulation() {
+            const message = messageInput.value.trim();
+            
+            if (!message) {
+                alert('Please enter a message to send.');
+                return;
+            }
+
+            // Disable button and show loading
+            sendBtn.disabled = true;
+            loading.classList.add('active');
+
+            // Reset UI
+            resetUI();
+
+            try {
+                // Animate flow
+                animateFlow();
+
+                // Send request to backend
+                const response = await fetch('/run-simulation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Simulation failed');
+                }
+
+                const result = await response.json();
+
+                // Update UI with results
+                updateUI(result);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error running simulation: ' + error.message);
+            } finally {
+                sendBtn.disabled = false;
+                loading.classList.remove('active');
+            }
+        }
+
+        function resetUI() {
+            // Reset all boxes
+            document.getElementById('senderData').textContent = '-';
+            document.getElementById('senderMethod').textContent = '-';
+            document.getElementById('senderChecksum').textContent = '-';
+            document.getElementById('senderPacket').textContent = '-';
+
+            document.getElementById('serverData').textContent = '-';
+            document.getElementById('serverErrorApplied').textContent = '-';
+            document.getElementById('serverErrorMethod').textContent = '-';
+            document.getElementById('serverPacket').textContent = '-';
+
+            document.getElementById('receiverData').textContent = '-';
+            document.getElementById('receiverMethod').textContent = '-';
+            document.getElementById('receiverReceivedChecksum').textContent = '-';
+            document.getElementById('receiverComputedChecksum').textContent = '-';
+
+            const statusDiv = document.getElementById('receiverStatus');
+            statusDiv.className = 'status pending';
+            statusDiv.textContent = 'Running simulation...';
+        }
+
+        function animateFlow() {
+            // Animate arrows
+            const arrow1 = document.getElementById('arrow1');
+            const arrow2 = document.getElementById('arrow2');
+
+            setTimeout(() => {
+                arrow1.classList.add('animate');
+                document.getElementById('senderBox').classList.add('active');
+            }, 100);
+
+            setTimeout(() => {
+                arrow1.classList.remove('animate');
+                arrow2.classList.add('animate');
+                document.getElementById('senderBox').classList.remove('active');
+                document.getElementById('serverBox').classList.add('active');
+            }, 800);
+
+            setTimeout(() => {
+                arrow2.classList.remove('animate');
+                document.getElementById('serverBox').classList.remove('active');
+                document.getElementById('receiverBox').classList.add('active');
+            }, 1600);
+
+            setTimeout(() => {
+                document.getElementById('receiverBox').classList.remove('active');
+            }, 2400);
+        }
+
+        function updateUI(result) {
+            // Update Sender box
+            document.getElementById('senderData').textContent = result.original_data || '-';
+            document.getElementById('senderMethod').textContent = result.method || '-';
+            document.getElementById('senderChecksum').textContent = result.sent_checksum || '-';
+            document.getElementById('senderPacket').textContent = result.original_packet || '-';
+
+            // Update Server box
+            document.getElementById('serverData').textContent = result.corrupted_data || '-';
+            const errorApplied = result.error_applied ? 'Yes' : 'No';
+            document.getElementById('serverErrorApplied').textContent = errorApplied;
+            
+            const errorMethodDiv = document.getElementById('serverErrorMethod');
+            if (result.error_applied) {
+                errorMethodDiv.innerHTML = `<span class="error-method">${result.error_method}</span>`;
+            } else {
+                errorMethodDiv.innerHTML = `<span class="no-error-method">None</span>`;
+            }
+            
+            document.getElementById('serverPacket').textContent = result.corrupted_packet || '-';
+
+            // Update Receiver box
+            document.getElementById('receiverData').textContent = result.received_data || result.corrupted_data || '-';
+            document.getElementById('receiverMethod').textContent = result.method || '-';
+            document.getElementById('receiverReceivedChecksum').textContent = result.sent_checksum || '-';
+            document.getElementById('receiverComputedChecksum').textContent = result.computed_checksum || '-';
+
+            // Update status
+            const statusDiv = document.getElementById('receiverStatus');
+            const isError = result.status === 'ERROR DETECTED';
+            statusDiv.className = isError ? 'status error' : 'status no-error';
+            statusDiv.textContent = result.status || 'Unknown';
+
+            // Highlight status with animation
+            setTimeout(() => {
+                statusDiv.style.transform = 'scale(1.05)';
+                setTimeout(() => {
+                    statusDiv.style.transform = 'scale(1)';
+                }, 300);
+            }, 100);
+        }
+    </script>
+</body>
+</html>
+

@@ -76,35 +76,68 @@ def burst_error(data: str, length: int = 3) -> str:
     return data[:start] + burst + data[end:]
 
 
-def corrupt_data_randomly(data: str) -> str:
-   
+def corrupt_data_randomly(data: str, debug: bool = True) -> tuple[str, str]:
+    """
+    Corrupt data randomly using one of the error injection methods.
+    
+    Args:
+        data: The data string to corrupt
+        debug: Whether to print debug messages (default: True)
+        
+    Returns:
+        tuple: (corrupted_data, error_method_name)
+        - corrupted_data: The corrupted string (or original if no error)
+        - error_method_name: Name of the method used, or "none" if no error
+    """
     if not data:
-        return data
+        return data, "none"
 
     # 50% chance: no error
     if random.random() < 0.5:
-        print("[DEBUG] No error applied.")
-        return data
+        if debug:
+            print("[DEBUG] No error applied.")
+        return data, "none"
 
     methods = [
-        char_substitution,
-        char_deletion,
-        char_insertion,
-        char_swapping,
-        flip_random_bit_in_char,
-        multiple_bit_flips,
-        burst_error,
+        ("char_substitution", char_substitution),
+        ("char_deletion", char_deletion),
+        ("char_insertion", char_insertion),
+        ("char_swapping", char_swapping),
+        ("bit_flip", flip_random_bit_in_char),
+        ("multiple_bit_flips", lambda d: multiple_bit_flips(d, count=3)),
+        ("burst_error", lambda d: burst_error(d, length=3)),
     ]
 
-    chosen_method = random.choice(methods)
-    print(f"[DEBUG] Error method used: {chosen_method.__name__}")
+    method_name, chosen_method = random.choice(methods)
+    if debug:
+        print(f"[DEBUG] Error method used: {method_name}")
+    
+    corrupted = chosen_method(data)
+    return corrupted, method_name
 
-    if chosen_method is multiple_bit_flips:
-        return multiple_bit_flips(data, count=3)
-    elif chosen_method is burst_error:
-        return burst_error(data, length=3)
-    else:
-        return chosen_method(data)
+
+def process_packet(packet_str: str, debug: bool = True) -> tuple[str, str, str, str, bool, str]:
+    """
+    Process a packet: parse it, corrupt the data, and create a new packet.
+    
+    Args:
+        packet_str: The packet string in format "DATA|METHOD|CHECKSUM"
+        debug: Whether to print debug messages (default: True)
+        
+    Returns:
+        tuple: (corrupted_packet_str, original_data, corrupted_data, method, checksum, error_applied, error_method)
+    """
+    try:
+        data_str, method, checksum = packet_str.rsplit("|", 2)
+    except ValueError:
+        raise ValueError("Invalid packet format. Expected 'DATA|METHOD|CHECKSUM'.")
+    
+    corrupted_data, error_method = corrupt_data_randomly(data_str, debug=debug)
+    error_applied = (error_method != "none")
+    
+    corrupted_packet_str = f"{corrupted_data}|{method}|{checksum}"
+    
+    return corrupted_packet_str, data_str, corrupted_data, method, checksum, error_applied, error_method
 
 
 def main():
@@ -127,19 +160,15 @@ def main():
             print(f"Packet received from sender: {packet}")
 
             try:
-                data_str, method, checksum = packet.rsplit("|", 2)
-            except ValueError:
-                print("Invalid packet format. Expected 'DATA|METHOD|CHECKSUM'.")
+                new_packet, data_str, corrupted_data, method, checksum, error_applied, error_method = process_packet(packet)
+            except ValueError as e:
+                print(str(e))
                 return
 
             print(f"Original DATA: {data_str}")
             print(f"METHOD       : {method}")
             print(f"CHECKSUM     : {checksum}")
-
-            corrupted_data = corrupt_data_randomly(data_str)
             print(f"Corrupted DATA: {corrupted_data}")
-
-            new_packet = f"{corrupted_data}|{method}|{checksum}"
             print(f"Packet to be sent to receiver: {new_packet}")
 
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as out_sock:
