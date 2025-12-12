@@ -53,9 +53,6 @@ METHOD : Kullanılan hata tespit yöntemi. Bu projede "PARITY".
 CONTROL : Gönderici tarafından hesaplanan kontrol bilgisi (even parity biti). "0" veya "1" şeklindedir.
 
 Örneğin:
-
-text
-Kodu kopyala
 deneme 12345555|PARITY|0
 bozmaz umarım|PARITY|1
 Bu format, hem server hem receiver tarafından kullanılır. Server DATA kısmını bozsa bile METHOD ve CONTROL alanları değiştirilmez.
@@ -86,9 +83,6 @@ Bu hesaplama fonksiyonu error_methods.py içinde tanımlıdır ve hem sender hem
 Hata tespiti fonksiyonlarının bulunduğu modüldür.
 
 Ana fonksiyon örneği:
-
-python
-Kodu kopyala
 calculate_checksum(data: bytes, method: str) -> str
 Şu anda yalnızca "PARITY" yöntemini destekler:
 
@@ -101,8 +95,6 @@ Görev adımları:
 
 Kullanıcıdan şu şekilde metin alır:
 
-text
-Kodu kopyala
 Göndermek istediğin metni gir: deneme 12345555
 Hata tespit yöntemi olarak "PARITY" seçilir.
 
@@ -112,8 +104,6 @@ calculate_checksum fonksiyonu çağrılarak parity biti hesaplanır.
 
 Paket şu formatta oluşturulur:
 
-text
-Kodu kopyala
 deneme 12345555|PARITY|0
 Sender, TCP soketi ile 127.0.0.1:5000 adresine bağlanır ve bu paketi server’a gönderir.
 
@@ -127,13 +117,9 @@ Görev adımları:
 127.0.0.1:5000 adresinde sender’dan gelecek bağlantıyı dinler.
 Ekranda şu mesaj görülür:
 
-text
-Kodu kopyala
 Server dinlemede: 127.0.0.1:5000
 Sender bağlandığında gelen paketi alır ve ekrana yazar:
 
-text
-Kodu kopyala
 Sender'dan gelen paket: deneme 12345555|PARITY|0
 packet.rsplit("|", 2) kullanarak paketi üç parçaya ayırır:
 
@@ -164,14 +150,10 @@ Bazı çalıştırmalarda hiç hata uygulanmaması için "No error applied" seç
 
 Bozulmuş veriyi ekrana yazar:
 
-text
-Kodu kopyala
 Asıl DATA: deneme 12345555
 Bozulmuş DATA: de4o{e 12345555
 Yeni paketi oluşturur:
 
-text
-Kodu kopyala
 de4o{e 12345555|PARITY|0
 Burada METHOD ve CHECKSUM aynen korunur.
 
@@ -182,13 +164,9 @@ Görev adımları:
 
 127.0.0.1:6000 adresinde server’dan gelecek bağlantıyı dinler:
 
-text
-Kodu kopyala
 Listening on 127.0.0.1:6000...
 Server bağlandığında gelen paketi alır:
 
-text
-Kodu kopyala
 Received package: de4o{e 12345555|PARITY|0
 Paketi data_str, method, received_checksum olarak ayırır:
 
@@ -208,13 +186,9 @@ Gönderilen ve hesaplanan parity karşılaştırılır:
 
 Eşit değilse:
 
-text
-Kodu kopyala
 Error detected in the received data!
 Eşitse:
 
-text
-Kodu kopyala
 No error detected in the received data.
 Bu şekilde alıcı, verinin iletim sırasında bozulup bozulmadığına karar verir.
 
@@ -231,47 +205,31 @@ Server tarafında:
 
 Paket şu şekilde alınır:
 
-text
-Kodu kopyala
 Sender'dan gelen paket: deneme 12345555|PARITY|0
 METHOD : PARITY, CHECKSUM: 0 olarak görüntülenir.
 
 Hata enjeksiyon yöntemi olarak burst_error seçilmiştir:
 
-text
-Kodu kopyala
 [DEBUG] Error method used: burst_error
 Bozulmuş veri:
 
-text
-Kodu kopyala
 Bozulmuş DATA: de4o{e 12345555
 Receiver’a gönderilen yeni paket:
 
-text
-Kodu kopyala
 de4o{e 12345555|PARITY|0
 Receiver tarafında:
 
 Gelen paket:
 
-text
-Kodu kopyala
 Received package: de4o{e 12345555|PARITY|0
 Gönderilen parity:
 
-text
-Kodu kopyala
 Sent Check Bits : 0
 Hesaplanan parity:
 
-text
-Kodu kopyala
 Computed Check Bits : 1
 Sonuç:
 
-text
-Kodu kopyala
 Error detected in the received data!
 Bu senaryoda server veriyi değiştirdiği için parity değeri değişmiş, alıcı da bu farkı tespit etmiştir.
 
@@ -284,47 +242,31 @@ Server tarafında:
 
 Paket:
 
-text
-Kodu kopyala
 Sender'dan gelen paket: bozmaz umarım|PARITY|1
 Asıl DATA: bozmaz umarım, CHECKSUM: 1
 
 Bu çalıştırmada hata uygulanmamıştır:
 
-text
-Kodu kopyala
 [DEBUG] No error applied.
 Bozulmuş veri aynı kalır:
 
-text
-Kodu kopyala
 Bozulmuş DATA: bozmaz umarım
 Receiver’a gönderilen paket:
 
-text
-Kodu kopyala
 bozmaz umarım|PARITY|1
 Receiver tarafında:
 
 Gelen paket:
 
-text
-Kodu kopyala
 Received package: bozmaz umarım|PARITY|1
 Gönderilen parity:
 
-text
-Kodu kopyala
 Sent Check Bits : 1
 Hesaplanan parity:
 
-text
-Kodu kopyala
 Computed Check Bits : 1
 Sonuç:
 
-text
-Kodu kopyala
 No error detected in the received data.
 Bu senaryoda server veriyi bozmadığı için parity değişmemiş, alıcı da verinin doğru iletildiğini kabul etmiştir.
 
