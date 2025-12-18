@@ -1,29 +1,15 @@
-"""
-Flask web application for the Data Communication simulation.
-Serves a modern UI and provides API endpoint for running simulations.
-"""
 from flask import Flask, render_template, request, jsonify
 from core_simulation import run_simulation
 
 app = Flask(__name__)
 
-
 @app.route('/')
 def index():
-    """Serve the main UI page."""
     return render_template('index.html')
-
 
 @app.route('/run-simulation', methods=['POST'])
 def run_simulation_endpoint():
-    """
-    API endpoint to run a simulation.
-    
-    Expected JSON payload:
-        {"message": "your message here"}
-    
-    Returns JSON with simulation results.
-    """
+
     try:
         data = request.get_json()
         
@@ -42,7 +28,6 @@ def run_simulation_endpoint():
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == '__main__':
     print("Starting Data Communication Simulation Web App...")
