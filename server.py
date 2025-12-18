@@ -8,6 +8,14 @@ LISTEN_PORT = 5000
 RECEIVER_HOST = "127.0.0.1"
 RECEIVER_PORT = 6000
 
+def recv_all(conn: socket.socket, bufsize: int = 4096) -> bytes:
+    chunks = []
+    while True:
+        part = conn.recv(bufsize)
+        if not part:
+            break
+        chunks.append(part)
+    return b"".join(chunks)
 
 def char_substitution(data: str) -> str:
     if not data:
@@ -47,7 +55,6 @@ def flip_random_bit_in_char(data: str) -> str:
         return data
     index = random.randrange(len(data))
     ch = data[index]
-
     code_point = ord(ch)
     bit_pos = random.randint(0, 7)
     flipped = code_point ^ (1 << bit_pos)
@@ -65,14 +72,10 @@ def multiple_bit_flips(data: str, count: int = 3) -> str:
 def burst_error(data: str, length: int = 3) -> str:
     if len(data) < 1:
         return data
-
     length = min(length, len(data))
-
     start = random.randrange(len(data) - length + 1)
     end = start + length
-
     burst = "".join(random.choice(string.printable) for _ in range(length))
-
     return data[:start] + burst + data[end:]
 
 
@@ -80,13 +83,11 @@ def corrupt_data_randomly(data: str, debug: bool = True) -> tuple[str, str]:
 
     if not data:
         return data, "none"
-
     # 50% chance: no error
     if random.random() < 0.5:
         if debug:
             print("[DEBUG] No error applied.")
         return data, "none"
-
     methods = [
         ("char_substitution", char_substitution),
         ("char_deletion", char_deletion),
@@ -96,27 +97,24 @@ def corrupt_data_randomly(data: str, debug: bool = True) -> tuple[str, str]:
         ("multiple_bit_flips", lambda d: multiple_bit_flips(d, count=3)),
         ("burst_error", lambda d: burst_error(d, length=3)),
     ]
-
     method_name, chosen_method = random.choice(methods)
     if debug:
         print(f"[DEBUG] Error method used: {method_name}")
-    
     corrupted = chosen_method(data)
     return corrupted, method_name
 
 
-def process_packet(packet_str: str, debug: bool = True) -> tuple[str, str, str, str, bool, str]:
+def process_packet(packet_str: str, debug: bool = True) -> tuple[str, str, str, str, str, bool, str]:
 
     try:
         data_str, method, checksum = packet_str.rsplit("|", 2)
     except ValueError:
         raise ValueError("Invalid packet format. Expected 'DATA|METHOD|CHECKSUM'.")
-    
+    method = method.strip().upper()
+    checksum = checksum.strip().upper()
     corrupted_data, error_method = corrupt_data_randomly(data_str, debug=debug)
     error_applied = (error_method != "none")
-    
     corrupted_packet_str = f"{corrupted_data}|{method}|{checksum}"
-    
     return corrupted_packet_str, data_str, corrupted_data, method, checksum, error_applied, error_method
 
 
@@ -131,12 +129,11 @@ def main():
         with conn:
             print(f"Sender connected: {addr}")
 
-            data = conn.recv(4096)
+            data = recv_all(conn)
             if not data:
                 print("Empty packet received, no processing.")
                 return
-
-            packet = data.decode("utf-8")
+            packet = data.decode("utf-8", errors="replace").strip()
             print(f"Packet received from sender: {packet}")
 
             try:
@@ -149,6 +146,7 @@ def main():
             print(f"METHOD       : {method}")
             print(f"CHECKSUM     : {checksum}")
             print(f"Corrupted DATA: {corrupted_data}")
+            print(f"Error applied? : {error_applied} ({error_method})")  
             print(f"Packet to be sent to receiver: {new_packet}")
 
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as out_sock:
