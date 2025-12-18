@@ -77,18 +77,7 @@ def burst_error(data: str, length: int = 3) -> str:
 
 
 def corrupt_data_randomly(data: str, debug: bool = True) -> tuple[str, str]:
-    """
-    Corrupt data randomly using one of the error injection methods.
-    
-    Args:
-        data: The data string to corrupt
-        debug: Whether to print debug messages (default: True)
-        
-    Returns:
-        tuple: (corrupted_data, error_method_name)
-        - corrupted_data: The corrupted string (or original if no error)
-        - error_method_name: Name of the method used, or "none" if no error
-    """
+
     if not data:
         return data, "none"
 
@@ -117,16 +106,7 @@ def corrupt_data_randomly(data: str, debug: bool = True) -> tuple[str, str]:
 
 
 def process_packet(packet_str: str, debug: bool = True) -> tuple[str, str, str, str, bool, str]:
-    """
-    Process a packet: parse it, corrupt the data, and create a new packet.
-    
-    Args:
-        packet_str: The packet string in format "DATA|METHOD|CHECKSUM"
-        debug: Whether to print debug messages (default: True)
-        
-    Returns:
-        tuple: (corrupted_packet_str, original_data, corrupted_data, method, checksum, error_applied, error_method)
-    """
+
     try:
         data_str, method, checksum = packet_str.rsplit("|", 2)
     except ValueError:
