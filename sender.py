@@ -12,6 +12,7 @@ SUPPORTED_METHODS = [
     "CRC16",
     "CRC32",
     "INTERNET_CHECKSUM",
+    "HAMMİNG",
 ]
 
 def create_packet(message: str, method: str ) -> tuple[str, str, str]:
